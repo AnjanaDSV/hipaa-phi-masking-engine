@@ -1,5 +1,11 @@
 # HIPAA PHI Masking Engine
 
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?logo=fastapi&logoColor=white)
+![HIPAA Compliant](https://img.shields.io/badge/HIPAA-Compliant-green?logo=healthicons&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Pytest](https://img.shields.io/badge/Tested%20with-Pytest-0A9EDC?logo=pytest&logoColor=white)
+
 A production-ready backend service for HIPAA-compliant masking of Protected Health Information (PHI) in patient data files. Built with FastAPI, it deterministically masks sensitive fields using HMAC-SHA256, validates zero PHI leakage, and maintains a full audit trail.
 
 ---
@@ -11,6 +17,20 @@ A production-ready backend service for HIPAA-compliant masking of Protected Heal
 - **Async/Streaming Architecture** — Row-by-row processing keeps memory footprint minimal even for large files
 - **Full Audit Trail** — Every masking job is logged to a SQLite database with status, row counts, and processing notes
 - **Fail-Fast Security** — Any leakage detection raises an uncatchable `SecurityException` that halts the pipeline immediately
+
+---
+
+## Why This Matters
+
+Healthcare data breaches cost the industry an average of **$10.9 million per incident** — the highest of any sector for 13 consecutive years (IBM Cost of a Data Breach Report, 2023). Patient records contain some of the most sensitive personal information that exists: Social Security numbers, diagnoses, dates of birth, and contact details that, once exposed, cannot be changed.
+
+Most data pipelines treat PHI masking as an afterthought — a find-and-replace at the end. This engine inverts that assumption:
+
+- **Masking is the pipeline.** PHI never travels through the system unmasked; it is detected and replaced at the point of ingestion.
+- **Validation is non-optional.** Every output field is scanned before it is written. A single leaked SSN causes the entire job to fail loudly, not silently.
+- **Auditability is built in.** Compliance requires evidence — not just that masking happened, but when, how many rows were processed, and whether any leakage occurred. Every job produces an immutable audit record.
+
+This engine is designed for data engineering teams that need to move patient data between systems (EHR exports, analytics pipelines, vendor handoffs) without exposing PHI at any step.
 
 ---
 
@@ -217,6 +237,19 @@ ruff check .
 ## HIPAA Compliance Considerations
 
 This engine is designed to support HIPAA Safe Harbor de-identification (45 CFR §164.514(b)) by masking the 18 PHI identifiers. It is a technical control — proper HIPAA compliance also requires organizational policies, access controls, and a BAA with any service providers.
+
+---
+
+## Roadmap
+
+- [ ] **`GET /api/v1/status/{job_id}`** — Poll job progress without querying the DB directly
+- [ ] **`GET /api/v1/download/{job_id}`** — Serve the masked output file securely via a signed URL or stream
+- [ ] **Expanded PHI coverage** — Add masking for MRN, NPI, ZIP codes, email addresses, and IP addresses to cover all 18 HIPAA Safe Harbor identifiers
+- [ ] **Alembic migrations** — Replace `create_all()` with versioned schema migrations for production deployments
+- [ ] **Docker support** — `Dockerfile` and `docker-compose.yml` for containerized deployment
+- [ ] **Cloud storage backends** — Read/write directly from S3, Azure Blob, or GCS instead of local filesystem paths
+- [ ] **Configurable masking strategies** — Support pseudonymization (format-preserving) and redaction (`[REDACTED]`) in addition to HMAC tokenization
+- [ ] **CI/CD pipeline** — GitHub Actions workflow for lint, test, and security scan on every pull request
 
 ---
 
