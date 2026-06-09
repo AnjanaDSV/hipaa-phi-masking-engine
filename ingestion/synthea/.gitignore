@@ -1,0 +1,9 @@
+# Synthea jar is ~188 MB — too large for GitHub (100 MB limit)
+# Download via:
+#   curl -L https://github.com/synthetichealth/synthea/releases/latest/download/synthea-with-dependencies.jar \
+#        -o synthea-with-dependencies.jar
+synthea-with-dependencies.jar
+
+# Synthea generates a large amount of raw output; only the processed
+# CSV samples (in ../samples/) are committed.
+output/

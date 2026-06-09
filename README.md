@@ -43,6 +43,7 @@ This engine is designed for data engineering teams that need to move patient dat
 | Database / ORM | SQLite + SQLAlchemy |
 | Testing | Pytest |
 | Linting | Ruff |
+| Test Data | Faker (structured) + Synthea (clinical records) |
 
 ---
 
@@ -62,9 +63,13 @@ safe-sync-backend/
 ├── validators/
 │   └── checker.py             # Post-masking PHI leakage scanner
 ├── ingestion/
+│   ├── generate_patients.py       # Script to regenerate all test data
+│   ├── synthea/                   # Synthea jar + generated CSV output
 │   └── samples/
-│       ├── patients.csv           # Mock patient data for testing
-│       └── patients.masked.csv    # Example masked output
+│       ├── patients.csv           # 600 synthetic patient records (500 Faker + 100 Synthea)
+│       ├── patients_faker.csv     # 500 Faker-generated rows
+│       ├── patients_synthea.csv   # 111 Synthea-derived rows
+│       └── clinical_notes.txt     # 50 unstructured clinical notes with embedded PHI
 ├── tests/
 │   ├── test_api.py
 │   └── test_masking.py        # End-to-end masking pipeline tests
@@ -117,6 +122,8 @@ The API will be available at `http://localhost:8000`.
 ### `POST /api/v1/mask`
 
 Submit a file for PHI masking. Processing runs asynchronously in the background.
+
+The included test dataset contains 600 synthetic patient records — 500 generated with Faker for schema coverage and format diversity, 100 from Synthea (the industry-standard synthetic patient generator used in healthcare research) for clinical realism. Includes 50 unstructured clinical notes with naturally embedded PHI to test both structured and free-text masking.
 
 **Request**
 
@@ -200,6 +207,21 @@ Inspect the audit DB directly:
 
 ```bash
 python check_db.py
+```
+
+---
+
+## Regenerate Test Data
+
+Requires Java 24+ and Python 3.10+ with `faker` installed.
+
+```bash
+cd ingestion/synthea
+java -jar synthea-with-dependencies.jar -p 100 \
+  --exporter.csv.export=true \
+  --exporter.fhir.export=false Massachusetts
+cd ../..
+python ingestion/generate_patients.py
 ```
 
 ---
