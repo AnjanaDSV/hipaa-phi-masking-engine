@@ -275,6 +275,34 @@ This engine is designed to support HIPAA Safe Harbor de-identification (45 CFR Â
 
 ---
 
+## Microsoft Sentinel Integration
+
+Every masking job automatically sends an audit event to Microsoft Sentinel via the Azure Monitor Logs Ingestion API. Events land in the `PHIMaskingJobs_CL` custom table and can be queried with KQL.
+
+Set the following environment variables to enable (see `.env.example`):
+
+| Variable | Description |
+|---|---|
+| `AZURE_TENANT_ID` | Azure AD tenant ID |
+| `AZURE_CLIENT_ID` | Service principal client ID |
+| `AZURE_CLIENT_SECRET` | Service principal client secret |
+| `SENTINEL_DCE_ENDPOINT` | Data Collection Endpoint URL |
+| `SENTINEL_DCR_IMMUTABLE_ID` | Data Collection Rule immutable ID |
+| `SENTINEL_TABLE` | Custom table name (default: `PHIMaskingJobs_CL`) |
+
+**Example KQL query to find all jobs with PHI leakage:**
+
+```kql
+PHIMaskingJobs_CL
+| where phi_leakage_detected == true
+| project TimeGenerated, job_id, source_file, leaked_rows
+| order by TimeGenerated desc
+```
+
+The integration is optional â€” if env vars are not set the engine runs normally and only logs to SQLite.
+
+---
+
 ## License
 
 MIT
