@@ -15,8 +15,16 @@ venv/
 htmlcov/
 .coverage
 
+# Logs
+*.log
+*.stderr.log
+*.stdout.log
+server.err
+server.log
+
 # Database
 *.db
+audit.db
 
 # OS
 .DS_Store
