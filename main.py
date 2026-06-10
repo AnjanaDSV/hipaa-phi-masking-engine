@@ -10,7 +10,18 @@ FastAPI application entrypoint for SafeSync.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
+from dotenv import load_dotenv
 from fastapi import FastAPI
+
+# Load environment variables from .env before any module reads os.getenv(...).
+# Use an explicit path anchored to this file so it resolves regardless of the
+# process working directory (e.g. under `uvicorn --reload`).
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
+# Surface application INFO logs (e.g. Sentinel client init / event sent),
+# which are otherwise hidden by the default WARNING root level.
+logging.basicConfig(level=logging.INFO)
 
 from db import models as db_models
 from api.v1.mask_router import router as mask_router

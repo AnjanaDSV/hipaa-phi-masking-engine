@@ -24,6 +24,7 @@ from typing import Dict, Iterable, List
 import asyncio
 
 from core import masker
+from core.sentinel_client import sentinel
 from validators import checker
 from db import models as db_models
 
@@ -153,6 +154,13 @@ async def process_file(job_id: str, input_path: str, sensitive_fields: Iterable[
                     session.add(rec)
                     session.commit()
 
+            sentinel.send_job_event(
+                job_id=str(job_id),
+                status="COMPLETED",
+                rows_processed=rows_processed,
+                leaked_rows=leaked_rows,
+                source_file=input_path,
+            )
             logger.info("Job %s completed: rows=%d out=%s", job_id, rows_processed, out_path)
 
     except BaseException as exc:
@@ -170,6 +178,13 @@ async def process_file(job_id: str, input_path: str, sensitive_fields: Iterable[
                     session.commit()
         except Exception:
             logger.exception("Failed to update audit log after fatal error for job %s", job_id)
+        sentinel.send_job_event(
+            job_id=str(job_id),
+            status="FAILED",
+            rows_processed=rows_processed,
+            leaked_rows=leaked_rows,
+            source_file=input_path,
+        )
 
         # Reraise SecurityException so calling contexts are aware (BackgroundTasks will log)
         if isinstance(exc, masker.SecurityException):

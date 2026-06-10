@@ -4,3 +4,6 @@ sqlalchemy
 pytest
 ruff
 faker
+azure-identity
+azure-monitor-ingestion
+python-dotenv
